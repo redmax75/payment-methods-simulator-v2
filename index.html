@@ -1,0 +1,1110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Payment Methods Admin v2 — Cashier Simulator</title>
+<style>
+  :root {
+    --bg: #f5f7fa; --panel: #ffffff;
+    --line: #e5e7eb; --line-strong: #d1d5db;
+    --ink: #111827; --ink-2: #374151; --muted: #6b7280; --muted-2: #9ca3af;
+    --accent: #10b981; --accent-dark: #059669; --accent-soft: #d1fae5; --accent-tint: #ecfdf5;
+    --warn: #ef4444; --warn-soft: #fee2e2; --warn-ink: #991b1b;
+    --amber: #f59e0b; --amber-soft: #fef3c7; --amber-ink: #92400e; --amber-line: #fde68a;
+    --info: #3b82f6; --info-soft: #dbeafe; --info-ink: #1e40af;
+    --purple: #8b5cf6; --purple-soft: #ede9fe; --purple-ink: #6d28d9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, .04);
+    --shadow-md: 0 1px 3px rgba(15, 23, 42, .06), 0 4px 12px rgba(15, 23, 42, .04);
+    --shadow-lg: 0 10px 30px rgba(15, 23, 42, .15);
+    --r-sm: 6px; --r-md: 10px; --r-lg: 12px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; background: var(--bg); color: var(--ink);
+    font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Top bar (consistent with overview) */
+  header.app {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 24px; background: #0f172a; color: #f9fafb;
+  }
+  .app-brand { display: flex; align-items: center; gap: 12px; }
+  .app-logo {
+    width: 32px; height: 32px; background: var(--accent);
+    border-radius: 8px; display: grid; place-items: center;
+    color: #fff; font-weight: 800; font-size: 15px;
+    box-shadow: 0 2px 8px rgba(16,185,129,.4);
+  }
+  .app-brand h1 { font-size: 14px; margin: 0; font-weight: 600; }
+  .app-brand .subtitle { color: #94a3b8; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-top: 1px; }
+  .app-stats { display: flex; gap: 22px; color: #cbd5e1; font-size: 12px; align-items: center; }
+
+  main { padding: 22px 24px 60px; max-width: 1400px; margin: 0 auto; }
+
+  nav.view-nav {
+    display: flex; gap: 4px; background: var(--panel); padding: 4px; border-radius: var(--r-md);
+    box-shadow: var(--shadow-sm); border: 1px solid var(--line); margin-bottom: 18px;
+    width: fit-content;
+  }
+  nav.view-nav a {
+    padding: 8px 16px; text-decoration: none;
+    font-size: 13px; color: var(--muted); border-radius: var(--r-sm); font-weight: 500;
+    transition: all 0.15s;
+  }
+  nav.view-nav a:hover { color: var(--ink-2); }
+  nav.view-nav a.active { color: var(--ink); background: var(--accent-tint); font-weight: 600; }
+
+  .page-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--line);
+  }
+  .page-head h2 { margin: 0; font-size: 22px; font-weight: 700; color: var(--ink); letter-spacing: -.3px; }
+  .page-head .breadcrumb { color: var(--muted-2); font-size: 11px; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 2px; }
+  .share-btn {
+    padding: 8px 14px; font-size: 12px; font-weight: 500; border-radius: var(--r-sm); cursor: pointer;
+    border: 1px solid var(--line); background: var(--panel); color: var(--ink-2);
+    transition: all .15s;
+  }
+  .share-btn:hover { border-color: var(--accent); color: var(--accent-dark); background: var(--accent-tint); }
+  .share-btn.copied { background: var(--accent); color: #fff; border-color: var(--accent-dark); }
+
+  /* Layout */
+  .layout {
+    display: grid; grid-template-columns: 340px 1fr; gap: 18px;
+    align-items: start;
+  }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+  /* Profile pane */
+  .profile-pane {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md);
+    box-shadow: var(--shadow-sm); padding: 16px; position: sticky; top: 12px;
+    max-height: calc(100vh - 24px); overflow-y: auto;
+  }
+  .field { margin-bottom: 12px; }
+  .field label {
+    display: block; font-size: 11px; color: var(--muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px;
+  }
+  .field select, .field input[type=text], .field input[type=number], .field input[type=time] {
+    width: 100%; padding: 7px 10px; border: 1px solid var(--line);
+    border-radius: var(--r-sm); font-size: 13px; background: #fafafa; color: var(--ink);
+  }
+  .field select:focus, .field input:focus { outline: 0; border-color: var(--accent); background: #fff; }
+  .field select:disabled, .field input:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* Trust preset */
+  .trust-group {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 4px;
+  }
+  .trust-btn {
+    padding: 8px 6px; background: #f9fafb; border: 1px solid var(--line);
+    border-radius: var(--r-sm); font-size: 11px; font-weight: 600; cursor: pointer;
+    text-align: center; color: var(--ink-2); transition: all .12s;
+  }
+  .trust-btn:hover { border-color: var(--line-strong); }
+  .trust-btn.active { background: var(--accent-tint); border-color: var(--accent); color: var(--accent-dark); box-shadow: 0 1px 0 rgba(16,185,129,.2); }
+
+  .toggle-row { display: flex; align-items: center; gap: 8px; margin: 10px 0; font-size: 12px; color: var(--ink-2); }
+  .toggle-row input[type=checkbox] { margin: 0; }
+
+  /* Advanced fold */
+  .advanced {
+    border-top: 1px dashed var(--line); margin-top: 12px; padding-top: 10px;
+  }
+  .advanced summary {
+    cursor: pointer; font-size: 12px; color: var(--ink-2); font-weight: 600;
+    padding: 4px 0; user-select: none;
+  }
+  .advanced summary:hover { color: var(--ink); }
+  .adv-overrides {
+    display: inline-block; margin-left: 8px; padding: 2px 7px;
+    background: var(--amber-soft); color: var(--amber-ink); border: 1px solid var(--amber-line);
+    border-radius: 3px; font-size: 10px; letter-spacing: .3px; font-weight: 600;
+  }
+
+  .show-hidden-bar {
+    margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line);
+  }
+
+  /* Cashier pane */
+  .cashier-pane {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md);
+    box-shadow: var(--shadow-sm); overflow: hidden; min-height: 400px;
+  }
+  .cashier-head {
+    padding: 14px 18px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(to bottom, #fafbfc, #ffffff);
+  }
+  .cashier-head .title {
+    font-weight: 600; font-size: 15px; color: var(--ink);
+  }
+  .cashier-head .sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .family-section { padding: 14px 18px; border-bottom: 1px solid var(--line); }
+  .family-section:last-of-type { border-bottom: 0; }
+  .family-section h4 {
+    font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px;
+    margin: 0 0 10px; font-weight: 700;
+  }
+  .tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+
+  .tile {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: 12px; cursor: pointer; transition: all .12s;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .tile:hover { border-color: var(--line-strong); box-shadow: var(--shadow-md); }
+  .tile.show { border-left: 3px solid var(--accent); }
+  .tile.routed { border-left: 3px solid var(--info); background: #f0f7ff; }
+  .tile.message { border-left: 3px solid var(--amber); background: #fefbf3; }
+  .tile.hidden-debug { opacity: .5; border-left: 3px solid var(--muted-2); }
+
+  .tile-row1 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .tile-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .fam-icon {
+    width: 24px; height: 24px; border-radius: 5px; background: var(--accent-tint);
+    color: var(--accent-dark); display: grid; place-items: center; font-size: 11px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .fam-icon.wallet { background: var(--info-soft); color: var(--info-ink); }
+  .fam-icon.bank { background: var(--purple-soft); color: var(--purple-ink); }
+  .fam-icon.ob { background: #fce7f3; color: #9d174d; }
+  .fam-icon.other { background: #f3f4f6; color: var(--muted); }
+
+  .tile-title { font-weight: 600; color: var(--ink); font-size: 13px; }
+  .tile-provider { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+  .verdict-pill {
+    font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px; letter-spacing: .4px;
+    text-transform: uppercase; flex-shrink: 0;
+  }
+  .verdict-pill.show { background: var(--accent-soft); color: var(--accent-dark); }
+  .verdict-pill.routed { background: var(--info-soft); color: var(--info-ink); }
+  .verdict-pill.message { background: var(--amber-soft); color: var(--amber-ink); }
+  .verdict-pill.hide { background: #f3f4f6; color: var(--muted); }
+
+  .minmax { font-size: 11px; color: var(--ink-2); font-weight: 500; }
+  .minmax .lbl { color: var(--muted); font-weight: 400; }
+
+  .trust-tag {
+    display: inline-flex; gap: 4px; font-size: 10px; padding: 2px 7px; border-radius: 3px;
+    background: var(--accent-tint); color: var(--accent-dark); width: fit-content;
+    border: 1px solid var(--accent-soft);
+  }
+  .trust-tag.shortfall { background: var(--amber-soft); color: var(--amber-ink); border-color: var(--amber-line); }
+
+  .routed-line, .message-line {
+    font-size: 11px; color: var(--info-ink); padding: 4px 8px;
+    background: var(--info-soft); border-radius: 4px; margin-top: 2px;
+  }
+  .message-line { color: var(--amber-ink); background: var(--amber-soft); }
+
+  .hidden-reason {
+    font-size: 10px; color: var(--muted); margin-top: 2px;
+    font-style: italic;
+  }
+
+  /* Trace expander */
+  .trace {
+    margin-top: 8px; padding: 10px; background: #fafbfc; border: 1px solid var(--line);
+    border-radius: var(--r-sm); font-size: 11px; color: var(--ink-2);
+    display: none;
+  }
+  .tile.expanded .trace { display: block; }
+  .trace ol { margin: 0; padding-left: 18px; }
+  .trace li { margin-bottom: 3px; }
+  .trace li .layer { font-weight: 600; color: var(--ink); }
+
+  /* Empty / placeholder */
+  .empty {
+    padding: 60px 20px; text-align: center; color: var(--muted);
+  }
+  .empty h3 { margin: 0 0 6px; color: var(--ink-2); font-weight: 600; }
+
+  /* Rules button */
+  .rules-bar {
+    padding: 14px 18px; border-top: 1px solid var(--line); background: #fafbfc;
+    display: flex; justify-content: center; position: sticky; bottom: 0;
+  }
+  .rules-btn {
+    padding: 10px 20px; background: var(--ink); color: #fff; border: 0;
+    border-radius: var(--r-sm); font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: background .12s;
+  }
+  .rules-btn:hover { background: #1f2937; }
+  .rules-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(15,23,42,.5); z-index: 100;
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--panel); border-radius: var(--r-md); box-shadow: var(--shadow-lg);
+    max-width: 1000px; width: 100%; max-height: 80vh; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .modal-head {
+    padding: 16px 20px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-head h3 { margin: 0; font-size: 16px; font-weight: 600; }
+  .modal-head button {
+    background: none; border: 0; font-size: 20px; cursor: pointer; color: var(--muted);
+    padding: 0 6px; line-height: 1;
+  }
+  .modal-body { overflow-y: auto; padding: 0; }
+  .modal table {
+    width: 100%; border-collapse: collapse; font-size: 12px;
+  }
+  .modal thead th {
+    background: #f9fafb; color: var(--muted); font-weight: 600;
+    text-transform: uppercase; font-size: 10px; letter-spacing: .6px;
+    padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--line);
+    position: sticky; top: 0;
+  }
+  .modal td {
+    padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top;
+  }
+  .modal td.method-cell strong { color: var(--ink); }
+  .modal td.method-cell .slug { color: var(--muted); font-size: 10px; font-family: ui-monospace, monospace; }
+
+  .small-chip {
+    display: inline-block; font-size: 10px; padding: 1px 6px;
+    background: #f3f4f6; color: var(--ink-2); border-radius: 3px; margin-right: 3px;
+  }
+</style>
+</head>
+<body>
+
+<header class="app">
+  <div class="app-brand">
+    <div class="app-logo">P</div>
+    <div>
+      <h1>Payment Methods Admin</h1>
+      <div class="subtitle">v2 · Cashier Simulator</div>
+    </div>
+  </div>
+  <div class="app-stats">Signed in as <strong style="color:#f9fafb">operator@example.com</strong></div>
+</header>
+
+<main>
+
+  <nav class="view-nav">
+    <a href="https://payment-methods-overview-v2.vercel.app/" target="_blank" rel="noopener">Overview ↗</a>
+    <a href="https://payment-methods-admin-v2.vercel.app/" target="_blank" rel="noopener">Method Config ↗</a>
+    <a class="active" href="./">Cashier Simulator</a>
+  </nav>
+
+  <div class="page-head">
+    <div>
+      <div class="breadcrumb">Home › Simulator</div>
+      <h2>Cashier Simulator</h2>
+    </div>
+    <button class="share-btn" id="shareBtn" onclick="copyShareLink()">⎘ Copy share link</button>
+  </div>
+
+  <div class="layout">
+
+    <!-- Profile pane -->
+    <aside class="profile-pane">
+
+      <div class="field">
+        <label for="country">Country</label>
+        <select id="country" onchange="onCountryChange()">
+          <option value="">— pick a country —</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="currency">Currency</label>
+        <select id="currency" disabled onchange="onChange()">
+          <option value="">— pick a country first —</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="segment">Lifecycle segment</label>
+        <select id="segment" onchange="onChange()">
+          <option value="">— none —</option>
+          <option value="Bronze">Bronze</option>
+          <option value="Silver">Silver</option>
+          <option value="Gold">Gold</option>
+          <option value="Platinum">Platinum</option>
+          <option value="Diamond">Diamond</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="vip">VIP level</label>
+        <select id="vip" onchange="onChange()">
+          <option value="">— none —</option>
+          <option value="VIP1">VIP 1</option>
+          <option value="VIP2">VIP 2</option>
+          <option value="VIP3">VIP 3</option>
+          <option value="VIP4">VIP 4</option>
+          <option value="VIP5">VIP 5</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Trust state</label>
+        <div class="trust-group" id="trustGroup">
+          <button class="trust-btn active" data-preset="Untrusted" onclick="setTrust('Untrusted')">Untrusted</button>
+          <button class="trust-btn" data-preset="TrustedOptions" onclick="setTrust('TrustedOptions')">Trusted Options</button>
+          <button class="trust-btn" data-preset="AffiliateTrusted" onclick="setTrust('AffiliateTrusted')">Affiliate-trusted</button>
+          <button class="trust-btn" data-preset="Both" onclick="setTrust('Both')">Both</button>
+        </div>
+      </div>
+
+      <details class="advanced" id="advFold">
+        <summary>
+          ▾ Advanced<span class="adv-overrides" id="advChip" style="display:none">overrides active</span>
+        </summary>
+
+        <div class="field" style="margin-top:10px">
+          <label for="affiliate">Affiliate ID</label>
+          <input type="text" id="affiliate" placeholder="AFF-VIP-001" oninput="onAdvChange()" />
+        </div>
+
+        <div class="field">
+          <label for="settledCount">Settled deposit count</label>
+          <input type="number" id="settledCount" min="0" value="0" oninput="onAdvChange()" />
+        </div>
+
+        <div class="field">
+          <label for="settledAmount">Cumulative deposit amount (EUR)</label>
+          <input type="number" id="settledAmount" min="0" value="0" oninput="onAdvChange()" />
+        </div>
+
+        <div class="field">
+          <label for="weekday">Weekday</label>
+          <select id="weekday" onchange="onChange()">
+            <option value="Mon">Mon</option><option value="Tue">Tue</option>
+            <option value="Wed">Wed</option><option value="Thu">Thu</option>
+            <option value="Fri">Fri</option><option value="Sat">Sat</option>
+            <option value="Sun">Sun</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="time">Time (UTC)</label>
+          <input type="time" id="time" value="14:00" onchange="onChange()" />
+        </div>
+
+        <div class="field">
+          <label for="direction">Direction</label>
+          <select id="direction" onchange="onChange()">
+            <option value="deposit">Deposit</option>
+            <option value="withdrawal">Withdrawal</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>PSP daily count (for orchestration)</label>
+          <input type="number" id="pspDailyCount" min="0" value="0" oninput="onChange()" />
+        </div>
+      </details>
+
+      <div class="show-hidden-bar">
+        <label class="toggle-row">
+          <input type="checkbox" id="showHidden" onchange="onChange()" />
+          Show hidden methods (debug)
+        </label>
+      </div>
+
+    </aside>
+
+    <!-- Cashier pane -->
+    <section class="cashier-pane">
+      <div class="cashier-head">
+        <div>
+          <div class="title" id="cashierTitle">Cashier preview</div>
+          <div class="sub" id="cashierSub">Pick a country to start</div>
+        </div>
+        <div class="sub" id="visibleCount"></div>
+      </div>
+      <div id="cashierBody"></div>
+      <div class="rules-bar">
+        <button class="rules-btn" id="rulesBtn" onclick="openRules()" disabled>View rules for selected country</button>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- Rules modal -->
+<div class="modal-backdrop" id="rulesModal" onclick="if(event.target===this)closeRules()">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="rulesTitle">Rules for…</h3>
+      <button onclick="closeRules()">×</button>
+    </div>
+    <div class="modal-body" id="rulesBody"></div>
+  </div>
+</div>
+
+<script>
+// ───────────── Data catalogs ─────────────
+
+const COUNTRIES = {
+  'Germany':       { currencies: ['EUR','USD'], primary: 'EUR' },
+  'United Kingdom':{ currencies: ['GBP','EUR','USD'], primary: 'GBP' },
+  'Canada':        { currencies: ['CAD','USD'], primary: 'CAD' },
+  'Australia':     { currencies: ['AUD'], primary: 'AUD' },
+  'Norway':        { currencies: ['NOK','EUR'], primary: 'NOK' },
+  'Cyprus':        { currencies: ['EUR','USD'], primary: 'EUR' },
+  'Poland':        { currencies: ['PLN','EUR'], primary: 'PLN' },
+};
+
+// EUR-to-X rates (multiply EUR value × rate to get target currency)
+const FX = { EUR: 1, GBP: 0.85, USD: 1.08, CAD: 1.47, AUD: 1.65, NOK: 11.5, PLN: 4.30 };
+
+// Segment tier ordering (higher index = stronger)
+const LIFECYCLE_ORDER = ['NDC','Bronze','Silver','Gold','Platinum','Diamond'];
+const VIP_ORDER = ['VIP1','VIP2','VIP3','VIP4','VIP5'];
+
+// Affiliate registry with trust-bypass rules per method
+const AFFILIATES = {
+  'AFF-VIP-001': {
+    rules: {
+      'praxis_hpf':        { bypassSchedule: true,  bypassTrustedOptions: true,  minSegment: 'Silver' },
+      'praxis_mc':         { bypassSchedule: true,  bypassTrustedOptions: true,  minSegment: 'Silver' },
+      'treazus_google_pay':{ bypassSchedule: true,  bypassTrustedOptions: true,  minSegment: null },
+      'treazus_apple_pay': { bypassSchedule: true,  bypassTrustedOptions: true,  minSegment: null },
+    }
+  },
+  'AFF-ORG-100': {
+    rules: {
+      'praxis_hpf':{ bypassSchedule: false, bypassTrustedOptions: true, minSegment: 'Bronze' },
+    }
+  }
+};
+
+// Methods seed (matches Overview wireframe + adds schedule, limits, orchestration, trust rules)
+const METHODS = [
+  {
+    slug:'praxis_hpf', title:'Visa/MC', paysystem:'praxis', family:'Card',
+    currencies:['EUR','GBP','USD','CAD','AUD','NOK','PLN'],
+    deposit_allowed:true, withdrawal_allowed:false, status:'active',
+    schedule: { type:'window', weekdays:['Mon','Tue','Wed','Thu','Fri'], start:'06:00', end:'23:00' },
+    trustedOptions: { count: 1, amount: 500 }, // EUR
+    limits: { NDC:{min:10,max:500}, Bronze:{min:10,max:1000}, Silver:{min:10,max:2000}, Gold:{min:10,max:3000}, Platinum:{min:10,max:4000}, Diamond:{min:10,max:5000}, VIP1:{min:10,max:8000} },
+    orchestration: { enabled:true, dailyCount:3, action:'alternative', chain:['treazus_google_pay','treazus_apple_pay'] },
+  },
+  {
+    slug:'praxis_mc', title:'Mastercard', paysystem:'praxis', family:'Card',
+    currencies:['EUR','GBP','USD'],
+    deposit_allowed:true, withdrawal_allowed:false, status:'active',
+    schedule: { type:'always' },
+    trustedOptions: { count: 1, amount: 500 },
+    limits: { NDC:{min:10,max:500}, Bronze:{min:10,max:1000}, Silver:{min:10,max:2000}, Gold:{min:10,max:3000} },
+    orchestration: { enabled:true, dailyCount:3, action:'message', message:"You've hit the daily limit on {method}. Try Google Pay for an instant deposit." },
+  },
+  {
+    slug:'rillpay_google_pay', title:'Google Pay', paysystem:'rillpay', family:'Wallet',
+    currencies:['EUR','GBP','USD','CAD','AUD','NOK','PLN'],
+    deposit_allowed:true, withdrawal_allowed:false, status:'active',
+    schedule: { type:'always' },
+    trustedOptions: null,
+    limits: { NDC:{min:5,max:300}, Bronze:{min:5,max:800}, Silver:{min:5,max:1500} },
+    orchestration: { enabled:false },
+  },
+  {
+    slug:'treazus_google_pay', title:'Google Pay (Treazus)', paysystem:'treazus', family:'Wallet',
+    currencies:['EUR','GBP','USD'],
+    deposit_allowed:true, withdrawal_allowed:false, status:'active',
+    schedule: { type:'always' },
+    trustedOptions: null,
+    limits: { NDC:{min:5,max:500}, Bronze:{min:5,max:1000}, Silver:{min:5,max:2000} },
+    orchestration: { enabled:false },
+  },
+  {
+    slug:'treazus_apple_pay', title:'Apple Pay (Treazus)', paysystem:'treazus', family:'Wallet',
+    currencies:['EUR','GBP','USD'],
+    deposit_allowed:true, withdrawal_allowed:false, status:'active',
+    schedule: { type:'window', weekdays:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], start:'08:00', end:'22:00' },
+    trustedOptions: null,
+    limits: { NDC:{min:5,max:500} },
+    orchestration: { enabled:false },
+  },
+  {
+    slug:'mifinity_wallet', title:'Mifinity', paysystem:'mifinity', family:'Wallet',
+    currencies:['EUR','CAD','USD','AUD','GBP','NOK','PLN'],
+    deposit_allowed:true, withdrawal_allowed:true, status:'active',
+    schedule: { type:'always' },
+    trustedOptions: { count: 2, amount: 1000 },
+    limits: { NDC:{min:10,max:1000}, Silver:{min:10,max:3000}, Gold:{min:10,max:5000} },
+    orchestration: { enabled:false },
+  },
+  {
+    slug:'gigadat_interac', title:'Interac', paysystem:'gigadat', family:'Bank Transfer',
+    currencies:['CAD'],
+    deposit_allowed:true, withdrawal_allowed:true, status:'active',
+    schedule: { type:'always' },
+    trustedOptions: null,
+    limits: { NDC:{min:20,max:5000} },
+    orchestration: { enabled:false },
+  },
+  {
+    slug:'rillpay_dedicated_openbanking', title:'Revolut CY', paysystem:'rillpay', family:'Open Banking',
+    currencies:['EUR'],
+    deposit_allowed:true, withdrawal_allowed:false, status:'active',
+    schedule: { type:'always' },
+    trustedOptions: { count: 1, amount: 200 },
+    limits: { NDC:{min:10,max:2000} },
+    orchestration: { enabled:false },
+  },
+];
+
+const FAMILY_ORDER = ['Card','Wallet','Bank Transfer','Open Banking','Other'];
+const FAMILY_ICONS = { 'Card':'CD', 'Wallet':'WL', 'Bank Transfer':'BT', 'Open Banking':'OB', 'Other':'??' };
+const FAMILY_CLASS = { 'Card':'', 'Wallet':'wallet', 'Bank Transfer':'bank', 'Open Banking':'ob', 'Other':'other' };
+
+// ───────────── State ─────────────
+const TRUST_PRESETS = {
+  Untrusted:        { affiliate:'',            settledCount:0, settledAmount:0 },
+  TrustedOptions:   { affiliate:'',            settledCount:10, settledAmount:1000 },
+  AffiliateTrusted: { affiliate:'AFF-VIP-001', settledCount:0, settledAmount:0 },
+  Both:             { affiliate:'AFF-VIP-001', settledCount:10, settledAmount:1000 },
+};
+
+const STATE = {
+  country: '',
+  currency: '',
+  segment: '',
+  vip: '',
+  trust: 'Untrusted',
+  affiliate: '',
+  settledCount: 0,
+  settledAmount: 0,
+  weekday: 'Wed',
+  time: '14:00',
+  direction: 'deposit',
+  pspDailyCount: 0,
+  showHidden: false,
+  advOverride: false,
+};
+
+// ───────────── Helpers ─────────────
+function lifecycleAtLeast(playerSegment, requiredSegment) {
+  if (!requiredSegment) return true;
+  if (!playerSegment) return false;
+  return LIFECYCLE_ORDER.indexOf(playerSegment) >= LIFECYCLE_ORDER.indexOf(requiredSegment);
+}
+
+function resolveTier(method, player) {
+  // VIP outranks Lifecycle
+  if (player.vip && method.limits[player.vip]) return { tier: player.vip, ...method.limits[player.vip] };
+  if (player.segment && method.limits[player.segment]) return { tier: player.segment, ...method.limits[player.segment] };
+  return { tier: 'NDC', ...method.limits.NDC };
+}
+
+function fxFromEur(eurAmount, ccy) {
+  const rate = FX[ccy] ?? 1;
+  return Math.round(eurAmount * rate);
+}
+
+function withinSchedule(sch, weekday, time) {
+  if (!sch) return true;
+  if (sch.type === 'always') return true;
+  if (sch.type === 'window') {
+    if (!sch.weekdays.includes(weekday)) return false;
+    return time >= sch.start && time <= sch.end;
+  }
+  return true;
+}
+
+function scheduleSummary(sch) {
+  if (!sch || sch.type === 'always') return '24/7';
+  if (sch.type === 'window') {
+    const wd = sch.weekdays;
+    const isWeekdayOnly = wd.length === 5 && !wd.includes('Sat') && !wd.includes('Sun');
+    const isAll = wd.length === 7;
+    const prefix = isAll ? '' : (isWeekdayOnly ? 'Mon-Fri ' : wd.join(',') + ' ');
+    return prefix + sch.start + '-' + sch.end + ' UTC';
+  }
+  return '—';
+}
+
+function affRuleFor(method) {
+  const aff = STATE.affiliate;
+  if (!aff || !AFFILIATES[aff]) return null;
+  return AFFILIATES[aff].rules[method.slug] || null;
+}
+
+function affiliatesWithBypassFor(method) {
+  const list = [];
+  Object.keys(AFFILIATES).forEach(affId => {
+    const r = AFFILIATES[affId].rules[method.slug];
+    if (r && (r.bypassSchedule || r.bypassTrustedOptions)) {
+      list.push({ id: affId, minSegment: r.minSegment });
+    }
+  });
+  return list;
+}
+
+// ───────────── Evaluator ─────────────
+function evaluate(method) {
+  const trace = [];
+  const player = STATE;
+
+  // Layer 0 — Hard gates
+  if (method.status !== 'active') return { verdict:'hide', trace:[`Layer 0: status is ${method.status}`], reason:'status' };
+  if (player.direction === 'deposit' && !method.deposit_allowed) return { verdict:'hide', trace:[`Layer 0: deposit not allowed`], reason:'direction' };
+  if (player.direction === 'withdrawal' && !method.withdrawal_allowed) return { verdict:'hide', trace:[`Layer 0: withdrawal not allowed`], reason:'direction' };
+  if (!method.currencies.includes(player.currency)) return { verdict:'hide', trace:[`Layer 0: currency ${player.currency} not in [${method.currencies.join(', ')}]`], reason:'currency' };
+  trace.push(`Layer 0 (Hard gates): pass — status active · direction ${player.direction} allowed · currency ${player.currency} supported`);
+
+  // Layer 1 — Trusted Source (Affiliate)
+  let bypassSchedule = false, bypassTrustedOptions = false;
+  const affRule = affRuleFor(method);
+  if (affRule) {
+    const segOK = lifecycleAtLeast(player.segment, affRule.minSegment);
+    if (segOK) {
+      bypassSchedule = affRule.bypassSchedule;
+      bypassTrustedOptions = affRule.bypassTrustedOptions;
+      trace.push(`Layer 1 (Trusted Source): ${player.affiliate} applies${affRule.minSegment ? ' (seg ≥ ' + affRule.minSegment + ' OK)' : ''} → bypass schedule=${bypassSchedule}, bypass trusted options=${bypassTrustedOptions}`);
+    } else {
+      trace.push(`Layer 1 (Trusted Source): ${player.affiliate} configured but segment ${player.segment || '(none)'} < required ${affRule.minSegment} → no bypass`);
+    }
+  } else {
+    trace.push(`Layer 1 (Trusted Source): no affiliate bypass`);
+  }
+
+  // Layer 2 — Trusted Options (Earned trust)
+  let earned = false;
+  if (method.trustedOptions && !bypassTrustedOptions) {
+    if (player.settledCount >= method.trustedOptions.count || player.settledAmount >= method.trustedOptions.amount) {
+      earned = true;
+      trace.push(`Layer 2 (Trusted Options): met threshold (count ${player.settledCount} ≥ ${method.trustedOptions.count} OR amount ${player.settledAmount} ≥ ${method.trustedOptions.amount} EUR) → bypass schedule`);
+    } else {
+      trace.push(`Layer 2 (Trusted Options): not met (count ${player.settledCount} / ${method.trustedOptions.count}, amount ${player.settledAmount} / ${method.trustedOptions.amount} EUR)`);
+    }
+  } else if (bypassTrustedOptions) {
+    trace.push(`Layer 2 (Trusted Options): skipped — affiliate bypass`);
+  } else {
+    trace.push(`Layer 2 (Trusted Options): not configured`);
+  }
+
+  // Layer 3 — Schedule
+  if (!bypassSchedule && !earned && !bypassTrustedOptions) {
+    if (!withinSchedule(method.schedule, player.weekday, player.time)) {
+      return { verdict:'hide', trace:[...trace, `Layer 3 (Schedule): ${player.weekday} ${player.time} outside window → HIDDEN`], reason:'schedule' };
+    } else {
+      trace.push(`Layer 3 (Schedule): ${player.weekday} ${player.time} inside window`);
+    }
+  } else {
+    trace.push(`Layer 3 (Schedule): skipped — bypass active`);
+  }
+
+  // Layer 4 — Orchestration
+  if (method.orchestration?.enabled) {
+    const breached = player.pspDailyCount >= (method.orchestration.dailyCount || Infinity);
+    if (breached) {
+      trace.push(`Layer 4 (Orchestration): daily count ${player.pspDailyCount} ≥ ${method.orchestration.dailyCount} cap → action: ${method.orchestration.action}`);
+      if (method.orchestration.action === 'alternative') {
+        for (const altSlug of method.orchestration.chain) {
+          const alt = METHODS.find(x => x.slug === altSlug);
+          if (!alt) continue;
+          const altResult = evalVisibilityOnly(alt);
+          if (altResult.verdict === 'show') {
+            return { verdict:'routed', trace:[...trace, `  → routed to "${alt.title} (${alt.paysystem})"`], routedTo: alt };
+          }
+          trace.push(`  → alt "${alt.title}" not eligible`);
+        }
+        return { verdict:'hide', trace:[...trace, `  → fallback chain exhausted, HIDDEN`], reason:'orch-chain-exhausted' };
+      }
+      if (method.orchestration.action === 'hide') {
+        return { verdict:'hide', trace:[...trace, `  → hide silently`], reason:'orch-hide' };
+      }
+      if (method.orchestration.action === 'message') {
+        const msg = (method.orchestration.message || '').replace('{method}', method.title);
+        return { verdict:'message', trace:[...trace, `  → message: ${msg}`], message: msg };
+      }
+    } else {
+      trace.push(`Layer 4 (Orchestration): no cap breached`);
+    }
+  }
+
+  return { verdict:'show', trace:[...trace, `Final verdict: SHOW`] };
+}
+
+// Visibility-only (no orchestration) — used for alternative chain checks
+function evalVisibilityOnly(method) {
+  const player = STATE;
+  if (method.status !== 'active') return { verdict:'hide' };
+  if (player.direction === 'deposit' && !method.deposit_allowed) return { verdict:'hide' };
+  if (player.direction === 'withdrawal' && !method.withdrawal_allowed) return { verdict:'hide' };
+  if (!method.currencies.includes(player.currency)) return { verdict:'hide' };
+
+  let bypassSchedule = false, bypassTrustedOptions = false;
+  const affRule = affRuleFor(method);
+  if (affRule && lifecycleAtLeast(player.segment, affRule.minSegment)) {
+    bypassSchedule = affRule.bypassSchedule;
+    bypassTrustedOptions = affRule.bypassTrustedOptions;
+  }
+  let earned = false;
+  if (method.trustedOptions && !bypassTrustedOptions) {
+    if (player.settledCount >= method.trustedOptions.count || player.settledAmount >= method.trustedOptions.amount) earned = true;
+  }
+  if (!bypassSchedule && !earned && !bypassTrustedOptions) {
+    if (!withinSchedule(method.schedule, player.weekday, player.time)) return { verdict:'hide' };
+  }
+  return { verdict:'show' };
+}
+
+// ───────────── UI ─────────────
+function init() {
+  // Populate country dropdown
+  const sel = document.getElementById('country');
+  Object.keys(COUNTRIES).sort().forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    sel.appendChild(opt);
+  });
+
+  loadFromHash();
+  applyStateToForm();
+  refreshCurrencyDropdown();
+  render();
+  window.addEventListener('hashchange', () => { loadFromHash(); applyStateToForm(); refreshCurrencyDropdown(); render(); });
+}
+
+function loadFromHash() {
+  const h = window.location.hash.slice(1);
+  if (!h) return;
+  try {
+    const parsed = JSON.parse(decodeURIComponent(h));
+    Object.assign(STATE, parsed);
+  } catch (e) {
+    showToast('Could not parse the shared profile — starting fresh');
+  }
+}
+
+function syncHash() {
+  const clean = {};
+  Object.keys(STATE).forEach(k => {
+    if (STATE[k] !== '' && STATE[k] !== 0 && STATE[k] !== false) clean[k] = STATE[k];
+  });
+  history.replaceState(null, '', '#' + encodeURIComponent(JSON.stringify(clean)));
+}
+
+function applyStateToForm() {
+  document.getElementById('country').value = STATE.country;
+  document.getElementById('currency').value = STATE.currency;
+  document.getElementById('segment').value = STATE.segment;
+  document.getElementById('vip').value = STATE.vip;
+  document.getElementById('affiliate').value = STATE.affiliate;
+  document.getElementById('settledCount').value = STATE.settledCount;
+  document.getElementById('settledAmount').value = STATE.settledAmount;
+  document.getElementById('weekday').value = STATE.weekday;
+  document.getElementById('time').value = STATE.time;
+  document.getElementById('direction').value = STATE.direction;
+  document.getElementById('pspDailyCount').value = STATE.pspDailyCount;
+  document.getElementById('showHidden').checked = STATE.showHidden;
+  document.querySelectorAll('.trust-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === STATE.trust));
+  updateAdvChip();
+}
+
+function refreshCurrencyDropdown() {
+  const sel = document.getElementById('currency');
+  sel.innerHTML = '';
+  if (!STATE.country) {
+    sel.disabled = true;
+    const o = document.createElement('option'); o.value = ''; o.textContent = '— pick a country first —';
+    sel.appendChild(o);
+    return;
+  }
+  const c = COUNTRIES[STATE.country];
+  if (!c || !c.currencies.length) {
+    sel.disabled = true;
+    const o = document.createElement('option'); o.value = ''; o.textContent = '— no licensed currencies —';
+    sel.appendChild(o);
+    return;
+  }
+  sel.disabled = false;
+  c.currencies.forEach(ccy => {
+    const o = document.createElement('option'); o.value = ccy; o.textContent = ccy;
+    sel.appendChild(o);
+  });
+  if (!c.currencies.includes(STATE.currency)) STATE.currency = c.primary;
+  sel.value = STATE.currency;
+}
+
+function onCountryChange() {
+  STATE.country = document.getElementById('country').value;
+  refreshCurrencyDropdown();
+  onChange();
+}
+
+function onChange() {
+  STATE.country = document.getElementById('country').value;
+  STATE.currency = document.getElementById('currency').value;
+  STATE.segment = document.getElementById('segment').value;
+  STATE.vip = document.getElementById('vip').value;
+  STATE.weekday = document.getElementById('weekday').value;
+  STATE.time = document.getElementById('time').value;
+  STATE.direction = document.getElementById('direction').value;
+  STATE.pspDailyCount = +document.getElementById('pspDailyCount').value || 0;
+  STATE.showHidden = document.getElementById('showHidden').checked;
+  render();
+  syncHash();
+}
+
+function onAdvChange() {
+  STATE.affiliate = document.getElementById('affiliate').value.trim();
+  STATE.settledCount = +document.getElementById('settledCount').value || 0;
+  STATE.settledAmount = +document.getElementById('settledAmount').value || 0;
+  // detect override vs preset
+  const preset = TRUST_PRESETS[STATE.trust];
+  const diff = STATE.affiliate !== preset.affiliate
+            || STATE.settledCount !== preset.settledCount
+            || STATE.settledAmount !== preset.settledAmount;
+  STATE.advOverride = diff;
+  updateAdvChip();
+  render();
+  syncHash();
+}
+
+function updateAdvChip() {
+  document.getElementById('advChip').style.display = STATE.advOverride ? '' : 'none';
+}
+
+function setTrust(preset) {
+  STATE.trust = preset;
+  const p = TRUST_PRESETS[preset];
+  STATE.affiliate = p.affiliate;
+  STATE.settledCount = p.settledCount;
+  STATE.settledAmount = p.settledAmount;
+  STATE.advOverride = false;
+  document.querySelectorAll('.trust-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === preset));
+  document.getElementById('affiliate').value = STATE.affiliate;
+  document.getElementById('settledCount').value = STATE.settledCount;
+  document.getElementById('settledAmount').value = STATE.settledAmount;
+  updateAdvChip();
+  render();
+  syncHash();
+}
+
+// ───────────── Render ─────────────
+function render() {
+  const body = document.getElementById('cashierBody');
+  const head = document.getElementById('cashierTitle');
+  const sub = document.getElementById('cashierSub');
+  const rulesBtn = document.getElementById('rulesBtn');
+  const visCount = document.getElementById('visibleCount');
+
+  if (!STATE.country) {
+    head.textContent = 'Cashier preview';
+    sub.textContent = 'Pick a country to start';
+    visCount.textContent = '';
+    body.innerHTML = `<div class="empty"><h3>Pick a country</h3><p>The simulator needs a country to compute hard gates, currency licensing, and tier limits.</p></div>`;
+    rulesBtn.disabled = true;
+    rulesBtn.textContent = 'View rules for selected country';
+    return;
+  }
+  if (!STATE.currency) {
+    head.textContent = `Cashier · ${STATE.country}`;
+    sub.textContent = 'Pick a currency';
+    body.innerHTML = `<div class="empty"><h3>Pick a currency</h3></div>`;
+    rulesBtn.disabled = true;
+    return;
+  }
+
+  head.textContent = `Cashier · ${STATE.country} · ${STATE.currency}`;
+  sub.textContent = `${STATE.direction} flow · ${STATE.weekday} ${STATE.time} UTC · segment ${STATE.segment || '—'} / vip ${STATE.vip || '—'}`;
+
+  // Evaluate all methods
+  const results = METHODS.map(m => ({ method: m, result: evaluate(m) }));
+
+  const visible = results.filter(r => r.result.verdict !== 'hide');
+  const hidden = results.filter(r => r.result.verdict === 'hide');
+
+  visCount.textContent = `${visible.length} of ${METHODS.length} method${visible.length===1?'':'s'} visible`;
+
+  if (visible.length === 0 && !STATE.showHidden) {
+    body.innerHTML = `<div class="empty"><h3>No methods match ${STATE.currency}</h3><p>No methods in the catalog support ${STATE.currency} for a ${STATE.country} player on this profile.</p></div>`;
+    rulesBtn.disabled = true;
+    return;
+  }
+  rulesBtn.disabled = false;
+  rulesBtn.textContent = `View rules for ${STATE.country}`;
+
+  // Group by family
+  const byFamily = {};
+  visible.forEach(r => {
+    const f = r.method.family || 'Other';
+    if (!byFamily[f]) byFamily[f] = [];
+    byFamily[f].push(r);
+  });
+
+  let html = '';
+  FAMILY_ORDER.forEach(f => {
+    if (!byFamily[f] || !byFamily[f].length) return;
+    html += `<div class="family-section"><h4>${f}</h4><div class="tile-grid">`;
+    byFamily[f].forEach(r => html += renderTile(r.method, r.result));
+    html += `</div></div>`;
+  });
+
+  if (STATE.showHidden && hidden.length) {
+    html += `<div class="family-section"><h4>Hidden (debug)</h4><div class="tile-grid">`;
+    hidden.forEach(r => html += renderTile(r.method, r.result, true));
+    html += `</div></div>`;
+  }
+
+  body.innerHTML = html;
+}
+
+function renderTile(method, result, isHiddenDebug) {
+  const tier = resolveTier(method, STATE);
+  const minDisp = fxFromEur(tier.min, STATE.currency);
+  const maxDisp = fxFromEur(tier.max, STATE.currency);
+  const verdictCls = result.verdict;
+  const famCls = FAMILY_CLASS[method.family] || '';
+  const famIcon = FAMILY_ICONS[method.family] || '??';
+
+  let trustTagHtml = '';
+  if (!isHiddenDebug && (STATE.trust === 'AffiliateTrusted' || STATE.trust === 'Both') && STATE.affiliate) {
+    const rule = (AFFILIATES[STATE.affiliate]?.rules || {})[method.slug];
+    if (rule) {
+      const meets = lifecycleAtLeast(STATE.segment, rule.minSegment);
+      if (rule.minSegment && !meets) {
+        trustTagHtml = `<span class="trust-tag shortfall">⚠ Trust bypass not applied — ${rule.minSegment}+ required</span>`;
+      } else if (rule.minSegment) {
+        trustTagHtml = `<span class="trust-tag">${STATE.affiliate} trust: ${rule.minSegment}+ required</span>`;
+      } else {
+        trustTagHtml = `<span class="trust-tag">${STATE.affiliate} trust: any segment</span>`;
+      }
+    }
+  }
+
+  let middleLine = `<div class="minmax"><span class="lbl">Min</span> ${minDisp} ${STATE.currency} · <span class="lbl">Max</span> ${maxDisp} ${STATE.currency} <span class="lbl">(${tier.tier} tier)</span></div>`;
+
+  if (result.verdict === 'routed') {
+    middleLine += `<div class="routed-line">→ Routed to <strong>${result.routedTo.title}</strong> (${result.routedTo.paysystem})</div>`;
+  } else if (result.verdict === 'message') {
+    middleLine += `<div class="message-line">💬 ${result.message}</div>`;
+  } else if (result.verdict === 'hide') {
+    middleLine += `<div class="hidden-reason">hidden: ${result.reason}</div>`;
+  }
+
+  const verdictLabel = result.verdict === 'routed' ? 'ROUTED' : result.verdict === 'message' ? 'MESSAGE' : result.verdict === 'show' ? 'SHOW' : 'HIDE';
+
+  const traceHtml = `<div class="trace"><ol>${result.trace.map(t => {
+    const m = t.match(/^(Layer \d[^:]+):\s*(.+)$/);
+    if (m) return `<li><span class="layer">${m[1]}:</span> ${m[2]}</li>`;
+    return `<li>${t}</li>`;
+  }).join('')}</ol></div>`;
+
+  return `
+    <div class="tile ${verdictCls} ${isHiddenDebug ? 'hidden-debug' : ''}" onclick="this.classList.toggle('expanded')">
+      <div class="tile-row1">
+        <div class="tile-name">
+          <span class="fam-icon ${famCls}">${famIcon}</span>
+          <div>
+            <div class="tile-title">${method.title}</div>
+            <div class="tile-provider">${method.paysystem}</div>
+          </div>
+        </div>
+        <span class="verdict-pill ${verdictCls}">${verdictLabel}</span>
+      </div>
+      ${middleLine}
+      ${trustTagHtml}
+      ${traceHtml}
+    </div>
+  `;
+}
+
+// ───────────── Rules modal ─────────────
+function openRules() {
+  const modal = document.getElementById('rulesModal');
+  document.getElementById('rulesTitle').textContent = `Rules for ${STATE.country} · ${STATE.currency}`;
+
+  // Build rows for methods that pass hard gates
+  const rows = METHODS.filter(m => {
+    if (m.status !== 'active') return false;
+    if (STATE.direction === 'deposit' && !m.deposit_allowed) return false;
+    if (STATE.direction === 'withdrawal' && !m.withdrawal_allowed) return false;
+    if (!m.currencies.includes(STATE.currency)) return false;
+    return true;
+  });
+
+  const body = document.getElementById('rulesBody');
+  if (!rows.length) {
+    body.innerHTML = `<div class="empty"><p>No methods pass hard gates for ${STATE.country} · ${STATE.currency} · ${STATE.direction}.</p></div>`;
+  } else {
+    body.innerHTML = `
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Schedule</th><th>Trust bypass</th><th>Player tier limits</th><th>Orchestration</th></tr>
+        </thead>
+        <tbody>
+          ${rows.map(m => {
+            const tier = resolveTier(m, STATE);
+            const minDisp = fxFromEur(tier.min, STATE.currency);
+            const maxDisp = fxFromEur(tier.max, STATE.currency);
+            const affs = affiliatesWithBypassFor(m);
+            const affHtml = affs.length
+              ? affs.slice(0,2).map(a => `<span class="small-chip">${a.id}${a.minSegment ? ' · ' + a.minSegment + '+' : ''}</span>`).join('') + (affs.length > 2 ? `<span class="small-chip">+${affs.length - 2}</span>` : '')
+              : '—';
+            let orch = '—';
+            if (m.orchestration?.enabled) {
+              if (m.orchestration.action === 'alternative') orch = `Daily ${m.orchestration.dailyCount} → route → ${m.orchestration.chain[0]}`;
+              else if (m.orchestration.action === 'hide') orch = `Daily ${m.orchestration.dailyCount} → hide`;
+              else if (m.orchestration.action === 'message') orch = `Daily ${m.orchestration.dailyCount} → message`;
+            }
+            return `
+              <tr>
+                <td class="method-cell"><strong>${m.title}</strong><br><span class="slug">${m.slug}</span></td>
+                <td>${scheduleSummary(m.schedule)}</td>
+                <td>${affHtml}</td>
+                <td>${minDisp} – ${maxDisp} ${STATE.currency}<br><span class="small-chip">${tier.tier}</span></td>
+                <td>${orch}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  modal.classList.add('open');
+  document.addEventListener('keydown', escClose);
+}
+function closeRules() {
+  document.getElementById('rulesModal').classList.remove('open');
+  document.removeEventListener('keydown', escClose);
+}
+function escClose(e) { if (e.key === 'Escape') closeRules(); }
+
+// ───────────── Share link ─────────────
+function copyShareLink() {
+  syncHash();
+  navigator.clipboard.writeText(window.location.href).then(() => {
+    const btn = document.getElementById('shareBtn');
+    btn.classList.add('copied');
+    btn.textContent = '✓ Copied';
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '⎘ Copy share link'; }, 1500);
+  }).catch(() => showToast('Copy failed — select the URL bar manually'));
+}
+
+function showToast(msg) {
+  // crude wireframe toast
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:10px 16px;border-radius:6px;font-size:13px;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.2);';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+init();
+</script>
+</body>
+</html>
