@@ -71,64 +71,65 @@
   .share-btn:hover { border-color: var(--accent); color: var(--accent-dark); background: var(--accent-tint); }
   .share-btn.copied { background: var(--accent); color: #fff; border-color: var(--accent-dark); }
 
-  /* Layout */
-  .layout {
-    display: grid; grid-template-columns: 340px 1fr; gap: 18px;
-    align-items: start;
-  }
-  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+  /* Layout — single column */
+  .layout { display: block; }
 
-  /* Profile pane */
-  .profile-pane {
-    background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md);
-    box-shadow: var(--shadow-sm); padding: 16px; position: sticky; top: 12px;
-    max-height: calc(100vh - 24px); overflow-y: auto;
+  /* Drill-down breadcrumb */
+  .drill { display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap; }
+  .drill .step { display: flex; flex-direction: column; gap: 3px; }
+  .drill .step label {
+    font-size: 9px; color: var(--muted-2); font-weight: 700;
+    text-transform: uppercase; letter-spacing: .6px;
   }
-  .field { margin-bottom: 12px; }
-  .field label {
-    display: block; font-size: 11px; color: var(--muted); font-weight: 600;
-    text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px;
+  .drill select {
+    padding: 7px 10px; border: 1px solid var(--line-strong);
+    border-radius: var(--r-sm); font-size: 13px; font-weight: 600;
+    background: #fff; color: var(--ink); min-width: 140px; cursor: pointer;
   }
-  .field select, .field input[type=text], .field input[type=number], .field input[type=time] {
-    width: 100%; padding: 7px 10px; border: 1px solid var(--line);
-    border-radius: var(--r-sm); font-size: 13px; background: #fafafa; color: var(--ink);
-  }
-  .field select:focus, .field input:focus { outline: 0; border-color: var(--accent); background: #fff; }
-  .field select:disabled, .field input:disabled { opacity: .5; cursor: not-allowed; }
+  .drill select:focus { outline: 0; border-color: var(--accent); }
+  .drill select:disabled { opacity: .45; cursor: not-allowed; background: #f3f4f6; font-weight: 400; }
+  .drill .sep { color: var(--muted-2); font-size: 16px; padding-bottom: 6px; }
+  .drill .sep.dim { opacity: .25; }
 
-  /* Trust preset */
-  .trust-group {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 4px;
-  }
-  .trust-btn {
-    padding: 8px 6px; background: #f9fafb; border: 1px solid var(--line);
-    border-radius: var(--r-sm); font-size: 11px; font-weight: 600; cursor: pointer;
-    text-align: center; color: var(--ink-2); transition: all .12s;
-  }
-  .trust-btn:hover { border-color: var(--line-strong); }
-  .trust-btn.active { background: var(--accent-tint); border-color: var(--accent); color: var(--accent-dark); box-shadow: 0 1px 0 rgba(16,185,129,.2); }
-
-  .toggle-row { display: flex; align-items: center; gap: 8px; margin: 10px 0; font-size: 12px; color: var(--ink-2); }
-  .toggle-row input[type=checkbox] { margin: 0; }
-
-  /* Advanced fold */
-  .advanced {
-    border-top: 1px dashed var(--line); margin-top: 12px; padding-top: 10px;
-  }
-  .advanced summary {
+  /* Controls fold (trust & visibility) */
+  .controls-fold { border-top: 1px solid var(--line); background: #fafbfc; }
+  .controls-fold summary {
     cursor: pointer; font-size: 12px; color: var(--ink-2); font-weight: 600;
-    padding: 4px 0; user-select: none;
+    padding: 12px 18px; user-select: none; list-style: none;
+    display: flex; align-items: center; gap: 8px;
   }
-  .advanced summary:hover { color: var(--ink); }
-  .adv-overrides {
-    display: inline-block; margin-left: 8px; padding: 2px 7px;
-    background: var(--amber-soft); color: var(--amber-ink); border: 1px solid var(--amber-line);
-    border-radius: 3px; font-size: 10px; letter-spacing: .3px; font-weight: 600;
+  .controls-fold summary::-webkit-details-marker { display: none; }
+  .controls-fold summary::before { content: '▸'; color: var(--muted); transition: transform .12s; }
+  .controls-fold[open] summary::before { transform: rotate(90deg); }
+  .controls-fold summary:hover { color: var(--ink); }
+  .controls-fold .fold-body {
+    padding: 4px 18px 16px; display: flex; flex-direction: column; gap: 16px;
   }
-
-  .show-hidden-bar {
-    margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line);
+  .ctrl-group { display: flex; flex-direction: column; gap: 6px; }
+  .ctrl-group > label {
+    font-size: 11px; color: var(--muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: .5px;
   }
+  .seg-toggle {
+    display: inline-flex; border: 1px solid var(--line-strong);
+    border-radius: var(--r-sm); overflow: hidden; width: fit-content;
+  }
+  .seg-toggle button {
+    padding: 7px 18px; background: #fff; border: 0; border-right: 1px solid var(--line);
+    font-size: 12px; font-weight: 600; cursor: pointer; color: var(--muted); transition: all .12s;
+  }
+  .seg-toggle button:last-child { border-right: 0; }
+  .seg-toggle button.active { background: var(--accent); color: #fff; }
+  .seg-toggle button:not(.active):hover { background: var(--accent-tint); color: var(--accent-dark); }
+  .ctrl-hint { font-size: 11px; color: var(--muted); line-height: 1.45; max-width: 480px; }
+  .ctrl-hint strong { color: var(--ink-2); font-weight: 600; }
+  .ctrl-inline { display: flex; align-items: center; gap: 10px; }
+  .ctrl-inline input[type=number] {
+    width: 80px; padding: 6px 8px; border: 1px solid var(--line);
+    border-radius: var(--r-sm); font-size: 12px; background: #fff;
+  }
+  .toggle-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-2); cursor: pointer; }
+  .toggle-row input[type=checkbox] { margin: 0; }
 
   /* Cashier pane */
   .cashier-pane {
@@ -137,13 +138,15 @@
   }
   .cashier-head {
     padding: 14px 18px; border-bottom: 1px solid var(--line);
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
     background: linear-gradient(to bottom, #fafbfc, #ffffff);
   }
-  .cashier-head .title {
-    font-weight: 600; font-size: 15px; color: var(--ink);
+  .cashier-head .sub { font-size: 11px; color: var(--muted); }
+  .cashier-sub-bar {
+    padding: 8px 18px; font-size: 11px; color: var(--muted);
+    background: #fff; border-bottom: 1px solid var(--line);
   }
-  .cashier-head .sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
   .family-section { padding: 14px 18px; border-bottom: 1px solid var(--line); }
   .family-section:last-of-type { border-bottom: 0; }
@@ -190,13 +193,6 @@
 
   .minmax { font-size: 11px; color: var(--ink-2); font-weight: 500; }
   .minmax .lbl { color: var(--muted); font-weight: 400; }
-
-  .trust-tag {
-    display: inline-flex; gap: 4px; font-size: 10px; padding: 2px 7px; border-radius: 3px;
-    background: var(--accent-tint); color: var(--accent-dark); width: fit-content;
-    border: 1px solid var(--accent-soft);
-  }
-  .trust-tag.shortfall { background: var(--amber-soft); color: var(--amber-ink); border-color: var(--amber-line); }
 
   .routed-line, .message-line {
     font-size: 11px; color: var(--info-ink); padding: 4px 8px;
@@ -312,125 +308,66 @@
 
   <div class="layout">
 
-    <!-- Profile pane -->
-    <aside class="profile-pane">
-
-      <div class="field">
-        <label for="country">Country</label>
-        <select id="country" onchange="onCountryChange()">
-          <option value="">— pick a country —</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="currency">Currency</label>
-        <select id="currency" disabled onchange="onChange()">
-          <option value="">— pick a country first —</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="segment">Lifecycle segment</label>
-        <select id="segment" onchange="onChange()">
-          <option value="">— none —</option>
-          <option value="Bronze">Bronze</option>
-          <option value="Silver">Silver</option>
-          <option value="Gold">Gold</option>
-          <option value="Platinum">Platinum</option>
-          <option value="Diamond">Diamond</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="vip">VIP level</label>
-        <select id="vip" onchange="onChange()">
-          <option value="">— none —</option>
-          <option value="VIP1">VIP 1</option>
-          <option value="VIP2">VIP 2</option>
-          <option value="VIP3">VIP 3</option>
-          <option value="VIP4">VIP 4</option>
-          <option value="VIP5">VIP 5</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label>Trust state</label>
-        <div class="trust-group" id="trustGroup">
-          <button class="trust-btn active" data-preset="Untrusted" onclick="setTrust('Untrusted')">Untrusted</button>
-          <button class="trust-btn" data-preset="TrustedOptions" onclick="setTrust('TrustedOptions')">Trusted Options</button>
-          <button class="trust-btn" data-preset="AffiliateTrusted" onclick="setTrust('AffiliateTrusted')">Affiliate-trusted</button>
-          <button class="trust-btn" data-preset="Both" onclick="setTrust('Both')">Both</button>
-        </div>
-      </div>
-
-      <details class="advanced" id="advFold">
-        <summary>
-          ▾ Advanced<span class="adv-overrides" id="advChip" style="display:none">overrides active</span>
-        </summary>
-
-        <div class="field" style="margin-top:10px">
-          <label for="affiliate">Affiliate ID</label>
-          <input type="text" id="affiliate" placeholder="AFF-VIP-001" oninput="onAdvChange()" />
-        </div>
-
-        <div class="field">
-          <label for="settledCount">Settled deposit count</label>
-          <input type="number" id="settledCount" min="0" value="0" oninput="onAdvChange()" />
-        </div>
-
-        <div class="field">
-          <label for="settledAmount">Cumulative deposit amount (EUR)</label>
-          <input type="number" id="settledAmount" min="0" value="0" oninput="onAdvChange()" />
-        </div>
-
-        <div class="field">
-          <label for="weekday">Weekday</label>
-          <select id="weekday" onchange="onChange()">
-            <option value="Mon">Mon</option><option value="Tue">Tue</option>
-            <option value="Wed">Wed</option><option value="Thu">Thu</option>
-            <option value="Fri">Fri</option><option value="Sat">Sat</option>
-            <option value="Sun">Sun</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="time">Time (UTC)</label>
-          <input type="time" id="time" value="14:00" onchange="onChange()" />
-        </div>
-
-        <div class="field">
-          <label for="direction">Direction</label>
-          <select id="direction" onchange="onChange()">
-            <option value="deposit">Deposit</option>
-            <option value="withdrawal">Withdrawal</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>PSP daily count (for orchestration)</label>
-          <input type="number" id="pspDailyCount" min="0" value="0" oninput="onChange()" />
-        </div>
-      </details>
-
-      <div class="show-hidden-bar">
-        <label class="toggle-row">
-          <input type="checkbox" id="showHidden" onchange="onChange()" />
-          Show hidden methods (debug)
-        </label>
-      </div>
-
-    </aside>
-
     <!-- Cashier pane -->
     <section class="cashier-pane">
+
       <div class="cashier-head">
-        <div>
-          <div class="title" id="cashierTitle">Cashier preview</div>
-          <div class="sub" id="cashierSub">Pick a country to start</div>
+        <div class="drill">
+          <div class="step">
+            <label for="country">Country</label>
+            <select id="country" onchange="onCountryChange()">
+              <option value="">— pick a country —</option>
+            </select>
+          </div>
+          <span class="sep dim" id="sep1">▸</span>
+          <div class="step">
+            <label for="currency">Currency</label>
+            <select id="currency" disabled onchange="onCurrencyChange()">
+              <option value="">—</option>
+            </select>
+          </div>
+          <span class="sep dim" id="sep2">▸</span>
+          <div class="step">
+            <label for="segment">Segment <span style="font-weight:400;text-transform:none">(optional)</span></label>
+            <select id="segment" disabled onchange="onChange()">
+              <option value="">— none (NDC floor) —</option>
+            </select>
+          </div>
         </div>
         <div class="sub" id="visibleCount"></div>
       </div>
+
+      <div class="cashier-sub-bar" id="cashierSub">Pick a country to start</div>
+
       <div id="cashierBody"></div>
+
+      <details class="controls-fold" id="controlsFold">
+        <summary>Trust &amp; visibility</summary>
+        <div class="fold-body">
+          <div class="ctrl-group">
+            <label>Trusted Options</label>
+            <div class="seg-toggle" id="trustToggle">
+              <button class="active" data-preset="Untrusted" onclick="setTrust('Untrusted')">Not met</button>
+              <button data-preset="TrustedOptions" onclick="setTrust('TrustedOptions')">Met</button>
+            </div>
+            <div class="ctrl-hint" id="trustHint"></div>
+          </div>
+          <div class="ctrl-group">
+            <label>PSP daily count <span style="font-weight:400;text-transform:none">(orchestration)</span></label>
+            <div class="ctrl-inline">
+              <input type="number" id="pspDailyCount" min="0" value="0" oninput="onChange()" />
+              <span class="ctrl-hint">Simulated deposits already taken today across the PSP — drives orchestration caps.</span>
+            </div>
+          </div>
+          <div class="ctrl-group">
+            <label class="toggle-row">
+              <input type="checkbox" id="showHidden" onchange="onChange()" />
+              Show hidden methods (debug)
+            </label>
+          </div>
+        </div>
+      </details>
+
       <div class="rules-bar">
         <button class="rules-btn" id="rulesBtn" onclick="openRules()" disabled>View rules for selected country</button>
       </div>
@@ -569,10 +506,8 @@ const FAMILY_CLASS = { 'Card':'', 'Wallet':'wallet', 'Bank Transfer':'bank', 'Op
 
 // ───────────── State ─────────────
 const TRUST_PRESETS = {
-  Untrusted:        { affiliate:'',            settledCount:0, settledAmount:0 },
-  TrustedOptions:   { affiliate:'',            settledCount:10, settledAmount:1000 },
-  AffiliateTrusted: { affiliate:'AFF-VIP-001', settledCount:0, settledAmount:0 },
-  Both:             { affiliate:'AFF-VIP-001', settledCount:10, settledAmount:1000 },
+  Untrusted:      { settledCount:0,  settledAmount:0 },
+  TrustedOptions: { settledCount:10, settledAmount:1000 },
 };
 
 const STATE = {
@@ -589,7 +524,6 @@ const STATE = {
   direction: 'deposit',
   pspDailyCount: 0,
   showHidden: false,
-  advOverride: false,
 };
 
 // ───────────── Helpers ─────────────
@@ -770,11 +704,20 @@ function init() {
     sel.appendChild(opt);
   });
 
+  // Schedule / direction are fixed in v1 — default the evaluation moment to "now" (UTC)
+  const now = new Date();
+  STATE.weekday = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][now.getUTCDay()];
+  STATE.time = String(now.getUTCHours()).padStart(2,'0') + ':' + String(now.getUTCMinutes()).padStart(2,'0');
+  STATE.direction = 'deposit';
+
   loadFromHash();
   applyStateToForm();
   refreshCurrencyDropdown();
+  refreshSegmentDropdown();
   render();
-  window.addEventListener('hashchange', () => { loadFromHash(); applyStateToForm(); refreshCurrencyDropdown(); render(); });
+  window.addEventListener('hashchange', () => {
+    loadFromHash(); applyStateToForm(); refreshCurrencyDropdown(); refreshSegmentDropdown(); render();
+  });
 }
 
 function loadFromHash() {
@@ -798,19 +741,11 @@ function syncHash() {
 
 function applyStateToForm() {
   document.getElementById('country').value = STATE.country;
-  document.getElementById('currency').value = STATE.currency;
-  document.getElementById('segment').value = STATE.segment;
-  document.getElementById('vip').value = STATE.vip;
-  document.getElementById('affiliate').value = STATE.affiliate;
-  document.getElementById('settledCount').value = STATE.settledCount;
-  document.getElementById('settledAmount').value = STATE.settledAmount;
-  document.getElementById('weekday').value = STATE.weekday;
-  document.getElementById('time').value = STATE.time;
-  document.getElementById('direction').value = STATE.direction;
   document.getElementById('pspDailyCount').value = STATE.pspDailyCount;
   document.getElementById('showHidden').checked = STATE.showHidden;
-  document.querySelectorAll('.trust-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === STATE.trust));
-  updateAdvChip();
+  document.querySelectorAll('#trustToggle button').forEach(b => b.classList.toggle('active', b.dataset.preset === STATE.trust));
+  updateTrustHint();
+  // currency + segment <select> values are set by their refresh functions
 }
 
 function refreshCurrencyDropdown() {
@@ -838,57 +773,94 @@ function refreshCurrencyDropdown() {
   sel.value = STATE.currency;
 }
 
+// Segment dropdown lists only tiers that at least one eligible method actually configures
+// for the current country + currency — Lifecycle and VIP grouped separately.
+function refreshSegmentDropdown() {
+  const sel = document.getElementById('segment');
+  sel.innerHTML = '<option value="">— none (NDC floor) —</option>';
+  if (!STATE.country || !STATE.currency) {
+    sel.disabled = true;
+    return;
+  }
+  const eligible = METHODS.filter(m =>
+    m.status === 'active' && m.deposit_allowed && m.currencies.includes(STATE.currency)
+  );
+  const tierKeys = new Set();
+  eligible.forEach(m => Object.keys(m.limits).forEach(k => tierKeys.add(k)));
+  const lifecycle = LIFECYCLE_ORDER.filter(t => t !== 'NDC' && tierKeys.has(t));
+  const vips = VIP_ORDER.filter(t => tierKeys.has(t));
+
+  sel.disabled = !(lifecycle.length || vips.length);
+  if (lifecycle.length) {
+    const og = document.createElement('optgroup'); og.label = 'Lifecycle';
+    lifecycle.forEach(t => {
+      const o = document.createElement('option'); o.value = 'L:' + t; o.textContent = t;
+      og.appendChild(o);
+    });
+    sel.appendChild(og);
+  }
+  if (vips.length) {
+    const og = document.createElement('optgroup'); og.label = 'VIP';
+    vips.forEach(t => {
+      const o = document.createElement('option'); o.value = 'V:' + t; o.textContent = 'VIP ' + t.slice(3);
+      og.appendChild(o);
+    });
+    sel.appendChild(og);
+  }
+
+  // Restore the prior selection if it still exists for this currency
+  let want = STATE.vip ? 'V:' + STATE.vip : (STATE.segment ? 'L:' + STATE.segment : '');
+  if (want && [...sel.options].some(o => o.value === want)) {
+    sel.value = want;
+  } else {
+    sel.value = '';
+    STATE.segment = ''; STATE.vip = '';
+  }
+}
+
 function onCountryChange() {
   STATE.country = document.getElementById('country').value;
   refreshCurrencyDropdown();
+  refreshSegmentDropdown();
+  onChange();
+}
+
+function onCurrencyChange() {
+  STATE.currency = document.getElementById('currency').value;
+  refreshSegmentDropdown();
   onChange();
 }
 
 function onChange() {
   STATE.country = document.getElementById('country').value;
   STATE.currency = document.getElementById('currency').value;
-  STATE.segment = document.getElementById('segment').value;
-  STATE.vip = document.getElementById('vip').value;
-  STATE.weekday = document.getElementById('weekday').value;
-  STATE.time = document.getElementById('time').value;
-  STATE.direction = document.getElementById('direction').value;
+  // Segment <select> carries one value for both axes: 'L:<tier>' or 'V:<level>'
+  const segVal = document.getElementById('segment').value;
+  if (segVal.startsWith('V:'))      { STATE.vip = segVal.slice(2); STATE.segment = ''; }
+  else if (segVal.startsWith('L:')) { STATE.segment = segVal.slice(2); STATE.vip = ''; }
+  else                              { STATE.segment = ''; STATE.vip = ''; }
   STATE.pspDailyCount = +document.getElementById('pspDailyCount').value || 0;
   STATE.showHidden = document.getElementById('showHidden').checked;
   render();
   syncHash();
 }
 
-function onAdvChange() {
-  STATE.affiliate = document.getElementById('affiliate').value.trim();
-  STATE.settledCount = +document.getElementById('settledCount').value || 0;
-  STATE.settledAmount = +document.getElementById('settledAmount').value || 0;
-  // detect override vs preset
-  const preset = TRUST_PRESETS[STATE.trust];
-  const diff = STATE.affiliate !== preset.affiliate
-            || STATE.settledCount !== preset.settledCount
-            || STATE.settledAmount !== preset.settledAmount;
-  STATE.advOverride = diff;
-  updateAdvChip();
-  render();
-  syncHash();
-}
-
-function updateAdvChip() {
-  document.getElementById('advChip').style.display = STATE.advOverride ? '' : 'none';
+function updateTrustHint() {
+  const el = document.getElementById('trustHint');
+  if (STATE.trust === 'TrustedOptions') {
+    el.innerHTML = "<strong>Met.</strong> The player has cleared the earned-trust threshold — methods that use Trusted Options bypass their schedule for this player.";
+  } else {
+    el.innerHTML = "<strong>Not met.</strong> The player hasn't earned trust on any method; schedule windows still apply normally.";
+  }
 }
 
 function setTrust(preset) {
   STATE.trust = preset;
   const p = TRUST_PRESETS[preset];
-  STATE.affiliate = p.affiliate;
   STATE.settledCount = p.settledCount;
   STATE.settledAmount = p.settledAmount;
-  STATE.advOverride = false;
-  document.querySelectorAll('.trust-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === preset));
-  document.getElementById('affiliate').value = STATE.affiliate;
-  document.getElementById('settledCount').value = STATE.settledCount;
-  document.getElementById('settledAmount').value = STATE.settledAmount;
-  updateAdvChip();
+  document.querySelectorAll('#trustToggle button').forEach(b => b.classList.toggle('active', b.dataset.preset === preset));
+  updateTrustHint();
   render();
   syncHash();
 }
@@ -896,13 +868,14 @@ function setTrust(preset) {
 // ───────────── Render ─────────────
 function render() {
   const body = document.getElementById('cashierBody');
-  const head = document.getElementById('cashierTitle');
   const sub = document.getElementById('cashierSub');
   const rulesBtn = document.getElementById('rulesBtn');
   const visCount = document.getElementById('visibleCount');
 
+  document.getElementById('sep1').classList.toggle('dim', !STATE.country);
+  document.getElementById('sep2').classList.toggle('dim', !STATE.currency);
+
   if (!STATE.country) {
-    head.textContent = 'Cashier preview';
     sub.textContent = 'Pick a country to start';
     visCount.textContent = '';
     body.innerHTML = `<div class="empty"><h3>Pick a country</h3><p>The simulator needs a country to compute hard gates, currency licensing, and tier limits.</p></div>`;
@@ -911,15 +884,14 @@ function render() {
     return;
   }
   if (!STATE.currency) {
-    head.textContent = `Cashier · ${STATE.country}`;
     sub.textContent = 'Pick a currency';
     body.innerHTML = `<div class="empty"><h3>Pick a currency</h3></div>`;
     rulesBtn.disabled = true;
     return;
   }
 
-  head.textContent = `Cashier · ${STATE.country} · ${STATE.currency}`;
-  sub.textContent = `${STATE.direction} flow · ${STATE.weekday} ${STATE.time} UTC · segment ${STATE.segment || '—'} / vip ${STATE.vip || '—'}`;
+  const tierLabel = STATE.vip ? ('VIP ' + STATE.vip.slice(3)) : (STATE.segment || 'NDC floor');
+  sub.textContent = `Deposit flow · evaluated ${STATE.weekday} ${STATE.time} UTC · tier ${tierLabel}`;
 
   // Evaluate all methods
   const results = METHODS.map(m => ({ method: m, result: evaluate(m) }));
@@ -970,21 +942,6 @@ function renderTile(method, result, isHiddenDebug) {
   const famCls = FAMILY_CLASS[method.family] || '';
   const famIcon = FAMILY_ICONS[method.family] || '??';
 
-  let trustTagHtml = '';
-  if (!isHiddenDebug && (STATE.trust === 'AffiliateTrusted' || STATE.trust === 'Both') && STATE.affiliate) {
-    const rule = (AFFILIATES[STATE.affiliate]?.rules || {})[method.slug];
-    if (rule) {
-      const meets = lifecycleAtLeast(STATE.segment, rule.minSegment);
-      if (rule.minSegment && !meets) {
-        trustTagHtml = `<span class="trust-tag shortfall">⚠ Trust bypass not applied — ${rule.minSegment}+ required</span>`;
-      } else if (rule.minSegment) {
-        trustTagHtml = `<span class="trust-tag">${STATE.affiliate} trust: ${rule.minSegment}+ required</span>`;
-      } else {
-        trustTagHtml = `<span class="trust-tag">${STATE.affiliate} trust: any segment</span>`;
-      }
-    }
-  }
-
   let middleLine = `<div class="minmax"><span class="lbl">Min</span> ${minDisp} ${STATE.currency} · <span class="lbl">Max</span> ${maxDisp} ${STATE.currency} <span class="lbl">(${tier.tier} tier)</span></div>`;
 
   if (result.verdict === 'routed') {
@@ -1016,7 +973,6 @@ function renderTile(method, result, isHiddenDebug) {
         <span class="verdict-pill ${verdictCls}">${verdictLabel}</span>
       </div>
       ${middleLine}
-      ${trustTagHtml}
       ${traceHtml}
     </div>
   `;
